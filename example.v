@@ -1,26 +1,23 @@
-import mongo
-import bson
-import json
+import elitru.jwt
 
-struct User {
-pub: 
-	first_name string
-	last_name string
+struct Test {
+	pub:
+		name string
 }
 
 fn main() {
-	// creating User to encode it in JSON
-	user := User{
-		first_name: 'Alexandr'
-		last_name: 'Pashkevich'
+	claims := Test {
+		name: "John Doe"
 	}
 
-	user_bson := bson.new_from_json(json.encode(user))
+	alg := jwt.new_algorithm(jwt.AlgorithmType.hs256)
 
-	uri := 'mongodb://127.0.0.1:27017'
-	mongo_uri := mongo.uri_new(uri)
-	client := mongo.client_new_from_uri(mongo_uri)
-	collection := mongo.client_get_collection(client, 'db_name', 'users')
+	jwt_token := jwt.encode<Test>(claims, alg, "Hello", 1000 * 60 * 60)?
+	println(jwt_token)
 
-	mongo.collection_insert_one(collection, user_bson)
+	claims_decoded := jwt.verify<Test>(jwt_token, alg, "Hello") or {
+		panic(err)
+	}
+
+	println(claims_decoded)
 }
